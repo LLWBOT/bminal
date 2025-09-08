@@ -21,7 +21,7 @@ RUN npm install --omit=dev
 COPY . .
 
 # Expose backend port
-EXPOSE 5000
+EXPOSE 4000
 
 # Start the app
 CMD ["npm", "start"]
