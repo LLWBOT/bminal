@@ -1,30 +1,27 @@
-# Use official Node.js image with Debian
+# Use official Node.js 18 image
 FROM node:18-bullseye
 
-# Install Python, pip, git (for repo cloning + Python support)
+# Install Python, pip, and Git (so user can run pkg/python commands later)
 RUN apt-get update && apt-get install -y \
-  python3 \
-  python3-pip \
-  git \
-  && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create workspace for user projects
-RUN mkdir -p /workspace
-
-# Set working directory for backend
+# Set working directory
 WORKDIR /usr/src/app
 
-# Copy only package files first (for caching)
+# Copy package.json files first (better caching)
 COPY package*.json ./
 
-# Install dependencies (faster, reliable, skips dev deps in prod)
-RUN npm ci --only=production
+# Install dependencies (omit dev for production, no lockfile needed)
+RUN npm install --omit=dev
 
-# Copy app source (doesn’t break cached layers if deps unchanged)
+# Copy app source
 COPY . .
 
-# Expose API port
-EXPOSE 4000
+# Expose backend port
+EXPOSE 5000
 
-# Run server
+# Start the app
 CMD ["npm", "start"]
