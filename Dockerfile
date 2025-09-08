@@ -1,25 +1,30 @@
-FROM debian:bullseye
+# Use official Node.js image with Debian
+FROM node:18-bullseye
 
-# Install Node.js, npm, Python, pip, git
+# Install Python, pip, git (for repo cloning + Python support)
 RUN apt-get update && apt-get install -y \
-  nodejs \
-  npm \
   python3 \
   python3-pip \
   git \
-  curl \
-  wget \
-  build-essential \
   && rm -rf /var/lib/apt/lists/*
 
-# Create workspace
+# Create workspace for user projects
 RUN mkdir -p /workspace
 
-# Backend
+# Set working directory for backend
 WORKDIR /usr/src/app
+
+# Copy only package files first (for caching)
 COPY package*.json ./
-RUN npm install
+
+# Install dependencies (faster, reliable, skips dev deps in prod)
+RUN npm ci --only=production
+
+# Copy app source (doesn’t break cached layers if deps unchanged)
 COPY . .
 
+# Expose API port
 EXPOSE 4000
+
+# Run server
 CMD ["npm", "start"]
